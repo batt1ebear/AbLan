@@ -1,6 +1,6 @@
 # AbLan
 ~~in cmd use~~ :
-    python scanner.py filename
+    ```python scanner.py filename```
  
 Abstract Language Compiler
 抽象话词法分析器
@@ -8,8 +8,8 @@ Abstract Language Compiler
 # Current Work : Lexical Scanner
 
 Emoji characters can be used as identifiers like:
-    🐎 = 1.14514
-    args = 🌶💩💉💧🐮🍺
+    ``` 🐎 = 1.14514
+    args = 🌶💩💉💧🐮🍺 ```
 
 # Way to use:
 In light of poor utf8 support in cmd and other terminals, output is printed in result.txt .
