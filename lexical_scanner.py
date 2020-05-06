@@ -24,9 +24,13 @@ keywords = ['for',
 'false',
 'batt1ebear',
 '🏠',#from
-'🍎'#pass 过
+'🍎'#pass 过,
+'def'
 ]  
 
+'''Speacial character :
++ - * / ! < > = += -= *= /= != <= >= == , ( ) :
+'''
 
 def preprocessing(raw):#预处理 去除多余空格和空行
     if not raw:
@@ -112,6 +116,18 @@ def getToken(filename):
                         f_write.write("  Speacial character --- !=\n")
                     else :
                         f_write.write("  Speacial character --- !\n")
+                elif read[i] == ">":
+                    if read[i+1] == "=":
+                        i +=1
+                        f_write.write("  Speacial character --- >=\n")
+                    else :
+                        f_write.write("  Speacial character --- >\n")
+                elif read[i] == "<":
+                    if read[i+1] == "=":
+                        i +=1
+                        f_write.write("  Speacial character --- <=\n")
+                    else :
+                        f_write.write("  Speacial character --- <\n")
                 elif read[i] == "=":
                     if read[i+1] == "=":
                         i +=1
@@ -119,10 +135,10 @@ def getToken(filename):
                     else :
                         f_write.write("  Speacial character --- =\n")
 
-                elif read[i] == "|":
-                    f_write.write("  Speacial character --- |\n")
-                elif read[i] == "&":
-                    f_write.write("  Speacial character --- &\n")
+                # elif read[i] == "|":
+                #     f_write.write("  Speacial character --- |\n")
+                # elif read[i] == "&":
+                #     f_write.write("  Speacial character --- &\n")
                 elif read[i] == ",":
                     f_write.write("  Speacial character --- ,\n")
                 elif read[i] == "(":
@@ -223,7 +239,7 @@ def getToken(filename):
                     pass
 
                 else:
-                    f_write.write("  [error]: illegal cahracter : "+ read[i]+"\n")
+                    f_write.write("  [error]: illegal character : "+ read[i]+"\n")
 
     except Exception as e:
         print(e)
