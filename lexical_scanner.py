@@ -32,6 +32,8 @@ keywords = ['for',
 + - * / ! < > = += -= *= /= != <= >= == , ( ) :
 '''
 
+result=[]
+
 def preprocessing(raw):#预处理 去除多余空格和空行
     if not raw:
                 print("----scanner completed successfully----")
