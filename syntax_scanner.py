@@ -9,6 +9,19 @@
     ALS -> ETT alop ETT | ALS alop ETT  #运算与逻辑语句  双目 
     GVL -> identifier vop ALS | identifier vop ETT #赋值运算语句
     
+    divided principle:
+    0 S -> GVL					
+    1 GVL -> id vop ETT			
+    2 GVL -> id vop ALS			
+    3 ALS -> ETT alop ETT			
+    4 ALS -> ALS alop ETT			
+    5 ETT -> id					
+    6 ETT -> DIGIT				
+    7 DIGIT -> int					
+    8 DIGIT -> float	
+
+	
+
 
 '''
 # coding=utf-8

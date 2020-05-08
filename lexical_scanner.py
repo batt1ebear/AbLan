@@ -58,7 +58,7 @@ def preprocessing(raw):#预处理 去除多余空格和空行
 def getToken(filename):
     try:
         f_read = open(filename,'r',encoding='utf8')
-        f_write = open('/example/result.txt','w',encoding='utf8')
+        f_write = open('/example/lexical_result.txt','w',encoding='utf8')
         row_counter=1#行数计数器
         while True:
 
@@ -264,7 +264,7 @@ def main():
             print("No file inputed.Please use 'python scanner.py youFile' in cmd.")
 
 def test():
-    getToken('emojiTest.txt')
+    getToken('example\emojiTest.txt')
     
 
 

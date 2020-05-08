@@ -16,7 +16,7 @@ In light of poor utf8 support in cmd and other terminals, output is printed in r
 Type ```python lexical_scanner.py youTestFile ``` in cmd and find result.txt to see the output.
 
 # Current Work ： Syntax Scanner
-building LR(1) syntax analysis table
+building LR(1) syntax analysis programme
 
 
 # environment:
