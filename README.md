@@ -12,19 +12,24 @@ Emoji characters can be used as identifiers like:
     args = 🌶💩💉💧🐮🍺 ```
 
 # Way to use lexical scanner:
-In light of poor utf8 support in cmd and other terminals, output is printed in result.txt .
-Type ```python lexical_scanner.py youTestFile ``` in cmd and find result.txt to see the output.
+~~ In light of poor utf8 support in cmd and other terminals, output is printed in result.txt .~~
+~~Type ```python lexical_scanner.py youTestFile ``` in cmd and find result.txt to see the output. ~~
+refer function to get result
 
 # Current Work ： Syntax Scanner
-building LR(1) syntax analysis programme
+principes extending
+only assignment sentence accepted now
 
 
-# environment:
+# runtime environment:
 + python3
-+ re
++ django
 
 
 # TODO:
-in lexical scanner divide special characters into ALOP(arithmetic and logical operators) and VOP(give_value operators) 
-    alop -> + | - | * | / | > | < | >= | <= | != | == #算数逻辑运算符 双目
-    vop -> = | += | -= | *= | /= #赋值运算符
+~~ + in lexical scanner divide special characters into ALOP(arithmetic and logical operators) and VOP(value giving operators) ~~
+    ~~ alop -> + | - | * | / | > | < | >= | <= | != | == #算数逻辑运算符 双目 ~~
+    ~~ vop -> = | += | -= | *= | /= #赋值运算符 ~~
+
++ principles extention
+~~ + django for visualization ~~

@@ -1,46 +1,50 @@
-# coding=utf-8
-#python抽象话词法分析器
-#author:batt1ebear
+'''
+AbLan lexical scanner
+author:batt1ebear 20171308074
 
-#语法规则：ascii字符和emoji可以作为标识符 标识符数字不能开头 {}作为注释
-#使用方法 python scanner.py inputFile ->输出到目录下新建的result.py
-import sys
-import re
+#lex principle：ascii字符和emoji可以作为标识符 标识符数字不能开头 %%作为注释
 
-keywords = ['for',
-'🦅',#in
-'while',
-'and',
-'or',
-'🐺',#none
-'🥛🍎',#if 如果
-'🙅‍',#not
-'elif',
-'else',
-'🏀',#break 
-'🚀🥛',#import 导入
-'☞🔪',#until 直到
-'💉',#true  真
-'false',
-'batt1ebear',
-'🏠',#from
-'🍎'#pass 过,
-'def'
-]  
+#usage:
+    in django: use function getToken(filepath)
+    
+    return:
+        function return : result state and
+            [
+                'ROW []: STR',
+            '   JUDGING',
+            '   JUDGING',
+            ···
+            ]
+            
+            for django display if state is 0 , you cannot enter syntax scanner and lex_to_syntax.json will not be built
 
-'''Speacial character :
-+ - * / ! < > = += -= *= /= != <= >= == , ( ) :
+        output file ->lex_to_syntax.json : 
+            [{value1:cataCode1},{value2:cataCode2},···]
+
+            for syntax scanner
+
+    in terminals : now not supported
 '''
 
-result=[]
+# coding=utf-8
+import sys
+import re
+import json
+from dat import vop,alop,keywords
+
+
+
+djangoResult=[]
+lexToDjango=[]
+resultStat = 1
 
 def preprocessing(raw):#预处理 去除多余空格和空行
-    if not raw:
-                print("----scanner completed successfully----")
-                sys.exit(0)#末尾程序出口
+    if not raw:#EOF
+        djangoResult.append("----scanner completed successfully----")
+        return 1
 
     elif raw[0] == '\n':
-        return False #空行不计入
+        return 0 #空行不计入
 
     elif raw[-1]!='\n':#末尾行加上\n保证一致处理
         raw+='\n'
@@ -57,18 +61,28 @@ def preprocessing(raw):#预处理 去除多余空格和空行
 
 def getToken(filename):
     try:
+        global resultStat
         f_read = open(filename,'r',encoding='utf8')
-        f_write = open('/example/lexical_result.txt','w',encoding='utf8')
+        #f_write = open('/example/lexical_result.txt','w',encoding='utf8')
         row_counter=1#行数计数器
         while True:
 
             raw = f_read.readline()
             f_read.flush()
-            read = preprocessing(raw)#预处理
-            if not read:#跳过空行
-                continue
 
-            f_write.write("ROW "+str(row_counter) + ': ' + read[:-1]+"\n")#防止显示\n
+            read = preprocessing(raw)#预处理 
+            if read == 1:#EOF跳出 返回resultStat 和 djangoResult           -----程序出口-------
+                if resultStat == 1:#全部正确可以生成json进行语法分析
+                    with open('lex_to_syntax.json','w') as f:
+                        json.dump(lexToDjango,f) 
+                    print("lexical correct")
+                return djangoResult,resultStat
+            elif read == 0:#空行
+                continue
+            else:#正常串继续
+                pass
+
+            djangoResult.append("ROW "+str(row_counter) + ': ' + read[:-1])#防止显示\n
             length = len(read)#本行长度
             i = -1
 
@@ -78,12 +92,13 @@ def getToken(filename):
                     continue#遇到空格继续状态0
                 elif read[i] == "\t":
                     continue#遇到制表符继续状态0
-                elif read[i] == "{":
+                elif read[i] == "%":
                     bs = i #bufferstart 单词起始位置
                     i += 1
-                    while read[i] != "}" :
+                    while read[i] != "%" :
                         if i+1 >=length-1 :
-                            f_write.write("  [error]："+read[bs:i+1]+" is illegal , need }\n")#{没有封闭
+                            djangoResult.append("  [error]："+read[bs:i+1]+" is illegal , need %")#{没有封闭
+                            resultStat = 0
                             break
                         i += 1
                     pass#省略注释 注：注释不可跨行
@@ -91,64 +106,81 @@ def getToken(filename):
                 elif read[i] == "+":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- +=\n")
+                        djangoResult.append("  Speacial character --- +=")
+                        lexToDjango.append({read[i-1:i+1]:vop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- +\n")
+                        djangoResult.append("  Speacial character --- +")
+                        lexToDjango.append({read[i]:alop[read[i]]})
                 elif read[i] == "-":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- -=\n")
+                        djangoResult.append("  Speacial character --- -=")
+                        lexToDjango.append({read[i-1:i+1]:vop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- -\n")
+                        djangoResult.append("  Speacial character --- -")
+                        lexToDjango.append({read[i]:alop[read[i]]})
                 elif read[i] == "*":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- *=\n")
+                        djangoResult.append("  Speacial character --- *=")
+                        lexToDjango.append({read[i-1:i+1]:vop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- *\n")
+                        djangoResult.append("  Speacial character --- *")
+                        lexToDjango.append({read[i]:alop[read[i]]})
                 elif read[i] == "/":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- /=\n")
+                        djangoResult.append("  Speacial character --- /=")
+                        lexToDjango.append({read[i-1:i+1]:vop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- /\n")
+                        djangoResult.append("  Speacial character --- /")
+                        lexToDjango.append({read[i]:alop[read[i]]})
                 elif read[i] == "!":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- !=\n")
+                        djangoResult.append("  Speacial character --- !=")
+                        lexToDjango.append({read[i-1:i+1]:alop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- !\n")
+                        djangoResult.append("  Speacial character --- !")
+                        lexToDjango.append({read[i]:alop[read[i]]})
                 elif read[i] == ">":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- >=\n")
+                        djangoResult.append("  Speacial character --- >=")
+                        lexToDjango.append({read[i-1:i+1]:alop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- >\n")
+                        djangoResult.append("  Speacial character --- >")
+                        lexToDjango.append({read[i]:alop[read[i]]})
                 elif read[i] == "<":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- <=\n")
+                        djangoResult.append("  Speacial character --- <=")
+                        lexToDjango.append({read[i-1:i+1]:alop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- <\n")
+                        djangoResult.append("  Speacial character --- <")
+                        lexToDjango.append({read[i]:alop[read[i]]})
                 elif read[i] == "=":
                     if read[i+1] == "=":
                         i +=1
-                        f_write.write("  Speacial character --- ==\n")
+                        djangoResult.append("  Speacial character --- ==")
+                        lexToDjango.append({read[i-1:i+1]:alop[read[i-1:i+1]]})
                     else :
-                        f_write.write("  Speacial character --- =\n")
+                        djangoResult.append("  Speacial character --- =")
+                        lexToDjango.append({read[i]:vop[read[i]]})
 
                 # elif read[i] == "|":
-                #     f_write.write("  Speacial character --- |\n")
+                #     djangoResult.append("  Speacial character --- |\n")
                 # elif read[i] == "&":
-                #     f_write.write("  Speacial character --- &\n")
+                #     djangoResult.append("  Speacial character --- &\n")
+                #TODO:new catagory
                 elif read[i] == ",":
-                    f_write.write("  Speacial character --- ,\n")
+                    djangoResult.append("  Speacial character --- ,")
                 elif read[i] == "(":
-                    f_write.write("  Speacial character --- (\n")#左右括号匹配交给语法分析
+                    djangoResult.append("  Speacial character --- (")#左右括号匹配交给语法分析
                 elif read[i] == ")":
-                    f_write.write("  Speacial character --- )\n")
+                    djangoResult.append("  Speacial character --- )")
                 elif read[i] == ":":
-                    f_write.write("  Speacial character --- :\n")
+                    djangoResult.append("  Speacial character --- :")
 
                 elif re.search('[a-zA-Z]',read[i])!=None or \
                 ('e29880'<= read[i].encode('utf8').hex() <= 'e2a7bf') or \
@@ -163,7 +195,7 @@ def getToken(filename):
                                 ('f09f8080'<= read[i+1].encode('utf8').hex() <= 'f09fadaf'):
                             i += 1
                         else:
-                            keywordRecg(read[bs:i+1],f_write)
+                            keywordRecg(read[bs:i+1])
                             break
 
 
@@ -180,23 +212,28 @@ def getToken(filename):
                                         pass
                                     elif read[i+1] == ' ' or read[i+1] == '\n' or read[i+1] == '\t' or re.search('[%&*()\-+=:]',read[i+1])!=None:#结束
                                         if read[i]=='.':#0. 错误输入
-                                            f_write.write("  [error]:"+read[bs:i+1]+"is illegal\n")
+                                            djangoResult.append("  [error]:"+read[bs:i+1]+"is illegal")
+                                            resultStat = 0
                                             break
-                                        f_write.write("  float --- value = "+read[bs:i+1]+"\n")
+                                        djangoResult.append("  float --- value = "+read[bs:i+1]+"")
+                                        lexToDjango.append({read[bs:i+1]:400})
                                         break
                                     else:#错误字符
                                         while read[i+1]!=' ' and read[i+1]!='\n' and read[i+1]!='\t':
                                             i+=1
-                                        f_write.write("  [error]: "+read[bs:i+1]+" is illegal.\n")
+                                        djangoResult.append("  [error]: "+read[bs:i+1]+" is illegal.")
+                                        resultStat = 0
                                         break
                                 break
                             elif read[i+1] == ' ' or read[i+1] == '\n' or read[i+1] == '\t':#结束
-                                f_write.write("  integer --- value = 0\n")
+                                djangoResult.append("  integer --- value = 0\n")
+                                lexToDjango.append({0:300})
                                 break
                             else:#错误字符
                                 while read[i+1]!=' ' and read[i+1]!='\n' and read[i+1]!='\t':
                                     i+=1
-                                f_write.write("  [error]: "+read[bs:i+1]+" is illegal.\n")
+                                djangoResult.append("  [error]: "+read[bs:i+1]+" is illegal.")
+                                resultStat = 0
                                 break
                     
                     else:#非0开头
@@ -211,26 +248,31 @@ def getToken(filename):
                                         pass
                                     elif read[i+1] == ' ' or read[i+1] == '\n' or read[i+1] == '\t':#结束
                                         if read[i]=='.':#x.错误输入
-                                            f_write.write("  [error]:"+read[bs:i+1]+"is illegal\n")
+                                            djangoResult.append("  [error]:"+read[bs:i+1]+"is illegal")
+                                            resultStat = 0
                                             break
-                                        f_write.write("  float --- value = "+read[bs:i+1]+"\n")
+                                        djangoResult.append("  float --- value = "+read[bs:i+1])
+                                        lexToDjango.append({read[bs:i+1]:400})
                                         break
                                     else:#错误字符
                                         while read[i+1]!=' ' and read[i+1]!='\n' and read[i+1]!='\t':
                                             i+=1
-                                        f_write.write("  [error]: "+read[bs:i+1]+" is illegal.\n")
+                                        djangoResult.append("  [error]: "+read[bs:i+1]+" is illegal.")
+                                        resultStat = 0
                                         break
                                 break
                             elif re.search('[0-9]',read[i+1])!=None:#继续整数
                                 i+=1
                                 pass
                             elif read[i+1] == ' ' or read[i+1] == '\n' or read[i+1] == '\t' or re.search('[%&*()\-+=:]',read[i+1])!=None:#结束
-                                f_write.write("  integer --- value = "+read[bs:i+1]+"\n")
+                                djangoResult.append("  integer --- value = "+read[bs:i+1])
+                                lexToDjango.append({read[bs:i+1]:300})
                                 break
                             else:#错误字符
                                 while read[i+1]!=' ' and read[i+1]!='\n' and read[i+1]!='\t':
                                     i+=1
-                                f_write.write("  [error]: "+read[bs:i+1]+" is illegal.\n")
+                                djangoResult.append("  [error]: "+read[bs:i+1]+" is illegal.")
+                                resultStat = 0
                                 break       
 
 
@@ -241,19 +283,23 @@ def getToken(filename):
                     pass
 
                 else:
-                    f_write.write("  [error]: illegal character : "+ read[i]+"\n")
+                    djangoResult.append("  [error]: illegal character : "+ read[i])
+                    resultStat = 0
 
     except Exception as e:
         print(e)
 
 
-def keywordRecg(Slice,f_write):
+def keywordRecg(Slice):
     if Slice in keywords:
-        f_write.write("  reservered keywords --- "+Slice+"\n")
+        djangoResult.append("  reservered keywords --- "+Slice)
+        lexToDjango.append({Slice:600})
     else:
-        f_write.write("  identifier --- "+Slice+"\n")
+        djangoResult.append("  identifier --- "+Slice)
+        lexToDjango.append({Slice:500})
     #TODO
 
+###########debug#############
 def main():
     if len(sys.argv) < 2:
         test()
@@ -264,7 +310,7 @@ def main():
             print("No file inputed.Please use 'python scanner.py youFile' in cmd.")
 
 def test():
-    getToken('example\emojiTest.txt')
+    getToken('example\\syntax_correct_test.txt')
     
 
 

@@ -1,104 +1,53 @@
-'''AbLan 自下而上语法LR(0)规则说明  类似python风格(并不
-    ver:1.0 (无emoji测试版本)
-    
-#   Vt = {id,int,float,vop,alop}    #identifier integer float value_giving_operators algorithm_and_logical_operators
-    Vn = {ETT,DIGIT,ALS,VGL}        #entity digit algorithm_and_logical_sentence value_giving_sentence
+'''
+AbLan 自下而上语法LR(0)规则说明  类似python风格(并不
+author:batt1ebear 20171308074
 
-#   repersent codes of Vt and Vn:
-    alop    : 100
-    vop     : 200
-    int     : 300
-    float   : 400
-    id      : 500
 
-    VGL     : 1
-    ALS     : 2
-    ETT     : 3
-    DIGIT   : 4
-
-    $       : 0
-
-#   principle:
-    ETT     -> id | DIGIT 
-    DIGIT   -> int | float 
-    ALS     -> ETT alop ETT | ALS alop ETT  
-    VGL     -> identifier vop ALS | identifier vop ETT 
-    
-#   divided principle:
-    0 S     -> VGL					
-    1 VGL   -> id vop ETT		1 -> 500,200,3	
-    2 VGL   -> id vop ALS		1 -> 500,200,2	
-    3 ALS   -> ETT alop ETT		2 -> 3,100,3	
-    4 ALS   -> ALS alop ETT		2 -> 2,100,3	
-    5 ETT   -> id				3 -> 500	
-    6 ETT   -> DIGIT			3 -> 4	
-    7 DIGIT -> int				4 -> 300	
-    8 DIGIT -> float			4 -> 400
-
+#   usage:
+    in django : use function getTree()
+    input : lex_to_syntax.json
+    return:
+        function return : result state and
+        [
+            ['statStk','charStk(expression)','nextSt','explanation of nextSt','remains in buff'],
+            [],
+            [],
+        ···
+        ]
 '''
 # coding=utf-8
 import sys
+import json
+from dat import LR1Table , Principe
 
-#        action         |       goto
-# alop vop int float id | VGL ALS ETT DIGIT
-LR1Table = [   
-[-1,-1,-1,-1,'s2',-1,1,-1,-1,-1],
-[-1,-1,-1,-1,-1,'acc',-1,-1,-1,-1],
-[-1,'s3',-1,-1,-1,-1,-1,-1,-1,-1],
-[-1,-1,'s15','s16','s13',-1,-1,17,4,14],
-['s5',-1,-1,-1,-1,'r1',-1,-1,-1,-1],
-[-1,-1,'s15','s16','s13',-1,-1,-1,6,14],
-['s7',-1,-1,-1,-1,'r3',-1,-1,-1,-1],
-[-1,-1,'s11','s12','s9',-1,-1,-1,8,1-1],
-['r3',-1,-1,-1,-1,-1,-1,-1,-1,-1],
-['r5',-1,-1,-1,-1,-1,-1,-1,-1,-1],
-['r6',-1,-1,-1,-1,-1,-1,-1,-1,-1],
-['r7',-1,-1,-1,-1,-1,-1,-1,-1,-1],
-['r8',-1,-1,-1,-1,-1,-1,-1,-1,-1],
-['r5',-1,-1,-1,-1,'r5',-1,-1,-1,-1],
-['r6',-1,-1,-1,-1,'r6',-1,-1,-1,-1],
-['r7',-1,-1,-1,-1,'r7',-1,-1,-1,-1],
-['r8',-1,-1,-1,-1,'r8',-1,-1,-1,-1],
-['s18',-1,-1,-1,-1,'r2',-1,-1,-1,-1],
-[-1,-1,'s15','s16','s13',-1,-1,-1,19,14],
-['r4',-1,-1,-1,-1,'r4',-1,-1,-1,-1],
-]
-
-Principe=[
-    [-1,-1],#0号规则用不到 无意义
-    [1,500,200,3],
-    [1,500,200,2],
-    [2,3,100,3],
-    [2,2,100,3],
-    [3,500],
-    [3,4],
-    [4,300],
-    [4,400],
-]
+djangoResult=[]
+resultStat = 1
+charbuff = []
 
 class Dstack:
 
     charStk=[0]#$
     statStk=[0]
 
-    def actionS(self,buffStat,buffChar):
-        self.charStk.append(buffChar)
+    def actionS(self,nextSt):
+        buffStat=int(nextSt[1:])
+        self.charStk.append(charbuff[0])
         self.statStk.append(buffStat)
+        del charbuff[0]
+        djangoResult.append([str(self.statStk),adapter(self.charStk),nextSt,'移入'+adapter(charbuff[0])+'转到状态'+nextSt[1:],adapter(charbuff)])
 
-    def actionR(self,buffPrin):
+    def actionR(self,nextSt):
+        buffPrin=int(nextSt[1:])
         replacingStr,replacedStr = self.restrict(buffPrin)
         del self.charStk[-len(replacedStr):]#删除被规约的字符和对等的状态
         del self.statStk[-len(replacedStr):]
         self.charStk.append(replacingStr)#换上规约后的字符
-        self.goto(self.statStk[-1],self.charStk[-1])
+        djangoResult.append([str(self.statStk),adapter(self.charStk),nextSt,'使用规则'+str(buffPrin)+'进行规约',adapter(charbuff)])
+        #self.goto(self.statStk[-1],self.charStk[-1])
         
-    def goto(self,topStat,topChar):#规约后必goto 跟在actionR后的内部函数
-        nextSt=findTable(topStat,topChar)
-        if nextSt == -1:
-            print("syntax error")
-            sys.exit(0)
-        else:
-            self.statStk.append(nextSt)#追平两栈高度
+    def goto(self,nextSt):#规约后必goto 跟在actionR后的内部函数
+        self.statStk.append(nextSt)#追平两栈高度
+        djangoResult.append([str(self.statStk),adapter(self.charStk),nextSt,'goto转到状态'+str(nextSt),adapter(charbuff)])
     def restrict(self,buffPrin):#根据规则规约
             return Principe[buffPrin][0],Principe[buffPrin][1:]
 
@@ -112,9 +61,9 @@ class Dstack:
 
 def findTable(given_status,given_char):#given_char不一定是buff 在goto操作是栈顶字符
     col=-1
-    if given_char == 100:#'alop'
+    if 100 <= given_char <= 199:#'alop'
         col = 0
-    elif given_char == 200:#'vop':
+    elif 200 <= given_char <= 299:#'vop':
         col = 1
     elif given_char == 300:#'int':
         col = 2
@@ -122,6 +71,7 @@ def findTable(given_status,given_char):#given_char不一定是buff 在goto操作
         col = 3
     elif given_char == 500:#'id':
         col = 4
+    #elif 600 <= given_char <=699:#keywords
     elif given_char == 0:#'$':
         col = 5
     elif given_char == 1:#'VGL':
@@ -137,35 +87,83 @@ def findTable(given_status,given_char):#given_char不一定是buff 在goto操作
 
     return LR1Table[given_status][col]
 
+def adapter(charStk):#将标识符转换回属性意义
+    char=''
+    length=0
+    if type(charStk) == int:
+        tem=charStk
+        charStk=[tem]
 
+    for i in range(len(charStk)):
+        if 100 <= charStk[i] <= 199:#'alop'
+            char+='alop '
+        elif 200 <= charStk[i] <= 299:#'vop':
+            char+='vop '
+        elif charStk[i] == 300:#'int':
+            char+='int '
+        elif charStk[i] == 400:#'float':
+            char+='float '
+        elif charStk[i] == 500:#'id':
+            char+='id '
+        #elif 600 <= given_char <=699:#keywords
+        elif charStk[i] == 0:#'$':
+            char+='$ '
+        elif charStk[i] == 1:#'VGL':
+            char+='VGL '
+        elif charStk[i] == 2:#'ALS':
+            char+='ALS '
+        elif charStk[i] == 3:#'ETT':
+            char+='ETT '
+        elif charStk[i] == 4:#'DIGIT':
+            char+='DIGIT '
+        else:
+            print("coding error 2")
+    return char
 
-def mainControl():
-    testStr=[500,200,500,100,300]
-    testStr.append(0)#末尾加上$
+def readLex():
+    with open('lex_to_syntax.json','r') as f:
+        raw = json.load(f)    
+    return raw
+
+def getTree():
+    global resultStat
+    raw = readLex()
+
+    
+    for i in range(len(raw)):
+        charbuff.append(list(raw[i].values())[0])#二元组提取分类标识码
+
+    charbuff.append(0)#末尾加上$
     d=Dstack()
     while(True):
-        point = testStr[0]#指针所指
-        nextSt = findTable(d.topStat(),point)#根据栈顶状态和指针查分析表
-        if nextSt[0] == 's':#shift压栈
-            buffStat=int(nextSt[1:])
-            d.actionS(buffStat,point)
-            del testStr[0]
-        elif nextSt[0] == 'r':#规约
-            buffPrin=int(nextSt[1:])
-            d.actionR(buffPrin)
-        elif nextSt == 'acc':
-            print("syntax correct ")
-            sys.exit(0)
-        elif nextSt == -1:
+        nextSt = findTable(d.topStat(),charbuff[0])#根据栈顶状态和指针查分析表
+        if nextSt == -1:
             print("syntax error ")
-            sys.exit(0)
+            djangoResult.append(["syntax error"])
+            resultStat=0
+            return djangoResult,resultStat
+        elif nextSt[0] == 's':#shift压栈
+            d.actionS(nextSt)
+        elif nextSt[0] == 'r':#规约
+            d.actionR(nextSt)
+            nextSt=findTable(d.topStat(),d.topChar())
+            if nextSt == -1:
+                print("syntax error ")
+                djangoResult.append(["syntax error"])
+                resultStat=0
+                return djangoResult,resultStat
+            d.goto(nextSt)
+        elif nextSt == 'acc':
+            djangoResult.append(['syntax correct'])
+            #print(djangoResult)
+            print("syntax correct ")
+            return djangoResult,resultStat
+
+           
         else:
             print("coding error 1")
             sys.exit(0)
 
-def readLex():
-    #TODO
-    return -1
-
+############debug##############
 if __name__ == "__main__":
-    mainControl()
+    getTree()
