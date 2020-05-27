@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>compile</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.4/semantic.min.css">
+</head>
+<body>
+    <div class="ui basic segment" style="text-align: center;">
+        <h1 class="ui header">编译原理实验</h1>
+    </div>
+    <div class="ui container">
+        <div class="ui segment">
+            <div class="ui basic segment">
+                <input class="ui teal basic button" type="file" id="upload" style="display: none;"></input>
+                <button class="ui teal basic button" id="btn-open">打开文件</button>
+                <button class="ui teal basic button" id="btn-lexical">词法分析</button>
+                <button class="ui teal basic button" id="btn-syntax">语法分析</button>
+            </div>
+            <div class="ui horizontal divider"><i class="tag icon"></i> content </div>
+            <div class="ui grid">
+                <div class="six wide column">
+                    <div class="column">
+                        <div class="ui raised segment">
+                            <a class="ui blue ribbon label">Content</a> 
+                            <pre class="m-maring-top" id="file-content">
+                                尚无选择文件
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="ten wide column">
+                    <table class="ui celled striped table">
+                        <thead>
+                            <tr><th colspan="5" id="res">结果</th></tr>
+                            <tr id = "tb-head">
+                                
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-content">
+                        </tbody>
+                      </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>               
+        pre {
+        white-space: pre-wrap;
+        white-space: -moz-pre-wrap;
+        white-space: -pre-wrap;
+        white-space: -o-pre-wrap;
+        *word-wrap: break-word;
+        *white-space : normal ;  
+        }
+
+    </style>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.2/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.4/semantic.min.js"></script>
+    <script>
+        
+        var getFileContent = function(fileInput, callback) {
+            if (fileInput.files && fileInput.files.length > 0 && fileInput.files[0].size > 0){
+
+            }
+        }
+        $(function() {
+            $("#btn-open").click(function(){
+                $("#upload").click();
+                //  读取文件中的内容
+                $("#upload").change(function(e){
+                    var resultFile = document.getElementById("upload").files[0];
+                    if (resultFile) {
+                        var reader = new FileReader();
+                        reader.readAsText(resultFile,'UTF-8');
+                        reader.onload = function (e) {
+                            var urlData = this.result;
+                            $("#file-content").text("");
+                            $("#file-content").text(urlData);
+                        };
+                    }
+
+                    console.log(resultFile);
+                    //  上传文件
+                    var formdata = new FormData();
+                    formdata.append('file', resultFile);
+                    $.ajax({
+                        url: "/upload",
+                        type: 'POST',
+                        data : formdata,
+                        processData: false,
+                        contentType: false,
+                        mimeType: 'multipart/form-data',
+                        success: function (data) {          
+                        }
+                    })
+                })
+            }) 
+        
+            $("#btn-lexical").click(function(){
+                var file = document.getElementById("upload").files[0];
+                var fileName = file.name;
+                console.log(file);
+                var formdata = new FormData();
+                formdata.append('fileName', fileName);
+                $.ajax({
+                    url: "/lexical",
+                    type: 'POST',
+                    data : formdata,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {  
+                        console.log(typeof data);
+                        console.log(data.result[0]);
+                        var arr = data.result[0];
+                        // const arr = data.split(',');
+                        // console.log(typeof arr);
+                        $("#res").text("词法分析结果");
+                        for(var i = 0; i < arr.length; i++){
+                            var htmlStr = "<tr><td><pre>" + arr[i] + "</pre></td></tr>";
+                            console.log(htmlStr);
+                            $("#tbody-content").append(htmlStr);
+
+                        } 
+                    }
+                })
+            })
+        
+            $('#btn-syntax').click(function(){
+                 $.ajax({
+                    url: "/syntax",
+                    type: 'POST',
+                    data : null,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {  
+                        console.log(data)
+                        var arr = data.result;
+                        console.log(arr);
+                        $("#res").text("语法分析结果")
+                        $('#tb-head').empty();
+                        $('#tb-head').append(
+                            "<th>123</th>" +
+                            "<th>123</th>" +
+                            "<th>123</th>" +
+                            "<th>123</th>" +
+                            "<th>123</th>");
+                        $("#tbody-content").empty();
+
+                        for(var i = 0; i < arr.length; i++) {
+                            var htmlStr = 
+                            "<tr><th>"+ arr[i][0] + "</th>" +
+                                "<th>"+ arr[i][1] + "</th>" +
+                                "<th>"+ arr[i][2] + "</th>" +
+                                "<th>"+ arr[i][3] + "</th>" +
+                                "<th>"+ arr[i][4] + "</th>";
+                            console.log(htmlStr);
+                            $("#tbody-content").append(htmlStr);
+                        }
+                        
+                    }
+                })
+            })
+
+        }); 
+
+
+    </script>
+
+</body>
+</html>

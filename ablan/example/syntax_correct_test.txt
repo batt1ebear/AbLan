@@ -1,0 +1,10 @@
+🚀🥛 afunction
+def afunction(1):{
+    p= 12
+}
+
+    while(t>=1):{
+        😀=12
+    }
+    % comment %
+    ⛵ 🧧

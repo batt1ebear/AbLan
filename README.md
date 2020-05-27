@@ -16,14 +16,13 @@ Emoji characters can be used as identifiers like:
 ~~Type ```python lexical_scanner.py youTestFile ``` in cmd and find result.txt to see the output. ~~
 refer function to get result
 
-# Current Work ： Syntax Scanner
-principes extending
-only assignment sentence accepted now
+# Use LR(1)
 
+# Current Work ： Completed
 
 # runtime environment:
 + python3
-+ django
++ django2
 
 
 # TODO:
@@ -31,5 +30,5 @@ only assignment sentence accepted now
     ~~ alop -> + | - | * | / | > | < | >= | <= | != | == #算数逻辑运算符 双目 ~~
     ~~ vop -> = | += | -= | *= | /= #赋值运算符 ~~
 
-+ principles extention
+~~ + principles extention ~~
 ~~ + django for visualization ~~
