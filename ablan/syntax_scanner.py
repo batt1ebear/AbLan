@@ -19,7 +19,7 @@ author:batt1ebear
 import sys
 import json
 import os
-from dat import LR1Table, Principe
+from .dat import LR1Table, Principe
 
 djangoResult=[]
 resultStat = 1
